@@ -1,12 +1,18 @@
 import { Controller, Get } from '@nestjs/common';
 import { CrawlService } from './crawl.service';
+import { ApiTags } from '@nestjs/swagger';
 
-@Controller('users')
+@Controller('crawl')
+@ApiTags("Crawl")
 export class CrawlController {
   constructor(private crawlService: CrawlService) {}
-  @Get('me')
-  async get() {
-    // return 'dsa'
-    return this.crawlService.crawlData()
+  @Get('/racers')
+  async getRacer() {
+    return this.crawlService.crawlRacerData()
+  }
+
+  @Get('/teams')
+  async getTeam() {
+    return this.crawlService.crawlTeamData()
   }
 }
