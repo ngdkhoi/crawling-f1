@@ -25,14 +25,14 @@ model Teams {
 model Racers {
   id Int @id @default(autoincrement())
   name String
-  href String
-  avatarUrl String
-  teanId Int
+  href String?
+  avatarUrl String?
+  teamId Int @default(1)
   racerSchedules RacerSchedules[]
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
 
-  team Teams @relation(fields: [teanId], references: [id])
+  team Teams @relation(fields: [teamId], references: [id])
 
   @@map("racers")
 }

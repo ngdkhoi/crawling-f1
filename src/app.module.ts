@@ -1,5 +1,8 @@
 import { Module } from '@nestjs/common';
 import { CrawlModule } from './crawl/crawl.module';
+import { RacerModule } from './racer/racer.module';
+import { PrismaService } from './prisma/prisma.service';
+import { PrismaModule } from './prisma/prisma.module';
 import {ConfigModule}  from '@nestjs/config';
 
 @Module({
@@ -7,7 +10,10 @@ import {ConfigModule}  from '@nestjs/config';
     ConfigModule.forRoot({
       isGlobal: true
     }),
-    CrawlModule
+    CrawlModule,
+    RacerModule,
+    PrismaModule
   ],
+  providers: [PrismaService],
 })
 export class AppModule {}

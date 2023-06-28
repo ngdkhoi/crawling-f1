@@ -1,12 +1,15 @@
 import { ForbiddenException, Injectable } from "@nestjs/common";
 import axios from "axios";
 import puppeteer from "puppeteer";
+import { PrismaService } from "src/prisma/prisma.service";
+import { RacerDto } from "src/racer/dto";
+import { RacerService } from "src/racer/racer.service";
 import { isString } from "util";
 
 @Injectable ({})
 export class CrawlService {
-  constructor() {}
-  async crawlRacerData() {
+  // constructor(private racerDto: RacerDto) {}
+  async crawlRacerData():Promise<{data: Array<object>}> {
     const url = 'https://www.formula1.com/en/drivers.html';
 
     const data = await (async () => {
@@ -24,7 +27,7 @@ export class CrawlService {
           const pts = line.getElementsByClassName('f1-wide--s')[0].innerHTML
           const href = line.getElementsByClassName('listing-item--link')[0].getAttribute('href')
           const team = line.getElementsByClassName('listing-item--team f1--xxs f1-color--gray5')[0].innerHTML
-          return {name, rank, pts, href, team}
+          return {name, href}
         })
       });
       
