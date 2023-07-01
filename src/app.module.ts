@@ -3,6 +3,9 @@ import { CrawlModule } from './crawl/crawl.module';
 import { RacerModule } from './racer/racer.module';
 import { PrismaService } from './prisma/prisma.service';
 import { PrismaModule } from './prisma/prisma.module';
+import { TeamController } from './team/team.controller';
+import { TeamService } from './team/team.service';
+import { TeamModule } from './team/team.module';
 import {ConfigModule}  from '@nestjs/config';
 
 @Module({
@@ -12,8 +15,10 @@ import {ConfigModule}  from '@nestjs/config';
     }),
     CrawlModule,
     RacerModule,
-    PrismaModule
+    PrismaModule,
+    TeamModule
   ],
-  providers: [PrismaService],
+  providers: [PrismaService, TeamService],
+  controllers: [TeamController],
 })
 export class AppModule {}

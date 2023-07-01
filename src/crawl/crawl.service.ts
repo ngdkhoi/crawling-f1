@@ -38,7 +38,7 @@ export class CrawlService {
     return {data: data}
   }
 
-  async crawlTeamData() {
+  async crawlTeamData():Promise<{data: Array<object>}> {
     const url = 'https://www.formula1.com/en/teams.html';
 
     const data = await (async () => {
@@ -54,8 +54,8 @@ export class CrawlService {
           const name = line.getElementsByClassName('f1-color--black')[0].innerHTML
           const pts = line.getElementsByClassName('f1-wide--s')[0].innerHTML
           const href = line.getElementsByClassName('listing-link')[0].getAttribute('href')
-          const logo = line.getElementsByClassName('logo')[0].getElementsByTagName('img')[0].getAttribute('src')//[0].getAttribute('src')
-          const car = line.getElementsByClassName('listing-image')[0].getElementsByTagName('img')[0].getAttribute('src');
+          const logo = line.getElementsByClassName('logo')[0].getElementsByTagName('img')[0].getAttribute('data-src')
+          const car = line.getElementsByClassName('listing-image')[0].getElementsByTagName('img')[0].getAttribute('data-src');
           const racers = [...line.getElementsByClassName('listing-team-drivers')[0].children].map(racer => {
             return racer.children[0].children[0].innerHTML + ' ' + racer.children[0].children[1].innerHTML
           })

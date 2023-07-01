@@ -2,14 +2,17 @@ import { IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class RacerDto {
   @IsString()
-  name: String
+  name: string
 
   @IsString()
-  href?: String
+  href?: string
 
   @IsString()
-  avatarUrl?: String
+  avatarUrl?: string
 
   @IsNumber()
-  teanId: Number
+  teanId: number
+
+  @IsString()
+  team: string
 }

@@ -1,1 +1,1 @@
-export * from './racer'
+export * from './racer.dto'

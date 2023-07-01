@@ -6,23 +6,52 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class RacerService {
   constructor(private prisma: PrismaService) {}
   async createRacers(listRacers) {
-    console.log('in here');
-    console.log(listRacers[0]);
     try {
       const addRacers = listRacers.forEach(async (racer) => {
-        const data = await this.prisma.racers.create({
+        const team = await this.prisma.teams.findFirst({where: {
+          name: racer.team
+        }})
+        await this.prisma.racers.create({
           data: {
             name: racer.name,
             href: racer.href,
+            teamId: team.id || 1
           }
         })
 
-        console.log(data);
-        
       })
       await Promise.all(addRacers)
     } catch (error) {
       console.log(error);
+      
+    }
+  }
+
+  async findRacer(racerInfo){
+    try {
+      const racers = await this.prisma.racers.findMany({
+        where:{
+          OR: [
+            {
+              name: {
+                contains: racerInfo?.racerName
+    
+              }
+            },
+            {
+              team: {
+                name: {
+                  contains: racerInfo?.teamName
+                }
+          },
+            }
+          ]
+          
+        }
+      })
+
+      return racers
+    } catch (error) {
       
     }
   }
