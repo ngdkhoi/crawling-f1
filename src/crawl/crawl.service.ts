@@ -1,6 +1,10 @@
 import { ForbiddenException, Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import axios from "axios";
+import moment from "moment";
 import puppeteer from "puppeteer";
+import { skip } from "rxjs";
+import {convertMinToSecond} from "src/helper/convertTime.helper";
 import { PrismaService } from "src/prisma/prisma.service";
 import { RacerDto } from "src/racer/dto";
 import { RacerService } from "src/racer/racer.service";
@@ -8,7 +12,7 @@ import { isString } from "util";
 
 @Injectable ({})
 export class CrawlService {
-  // constructor(private racerDto: RacerDto) {}
+  constructor(private config: ConfigService) {}
   async crawlRacerData():Promise<{data: Array<object>}> {
     const url = 'https://www.formula1.com/en/drivers.html';
 
@@ -68,5 +72,56 @@ export class CrawlService {
     }) ();
     
     return {data: data}
+  }
+
+  async crawlRacerScheduleData() {
+    try {
+      const url = this.config.get('F1_URL') + `/results.html/${2023}/races/1141/bahrain/race-result.html`
+      const data = await (async () => {
+        const browser = await puppeteer.launch({ headless: true });
+        const page = await browser.newPage();
+        await page.goto(url);
+        
+        const dhhData = await page.evaluate(() => {
+          const table = document.getElementsByClassName('resultsarchive-table')[0].getElementsByTagName('tbody')
+          
+          const lines = table[0].children; //Lấy mảng tr nằm trong tbody
+          return [...lines].map((line, idx) => {
+            const rank = line.getElementsByClassName('dark')[0].innerHTML
+            const name = line.getElementsByClassName('dark bold')[0].children[0].innerHTML + ' ' + line.getElementsByClassName('dark bold')[0].children[1].innerHTML
+            let time
+            if (idx == 0 || line.children[6].innerHTML == 'DNF') {
+              time = line.children[6].innerHTML
+            }
+            else {
+              time = (line.children[6].innerHTML).split(/[+<]/)[1]
+            }
+            const pts = line.children[7].innerHTML
+            
+            return {rank, name, pts, time, idx}
+          })
+        });
+        
+        await browser.close();
+        let currentTime = convertMinToSecond(dhhData[0]['time'])
+        
+        dhhData.forEach((data, idx) => {
+          if (idx != 0) {
+            currentTime += parseFloat(data['time'])
+            data['timeRace'] = currentTime
+          }
+          else {
+            data['timeRace'] = currentTime
+          }
+
+        })
+        return dhhData
+      }) ();
+      
+      return {data: data}
+    } catch (error) {
+      console.log(error);
+      
+    }
   }
 }

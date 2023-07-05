@@ -28,4 +28,9 @@ export class CrawlController {
     await this.teamService.createTeams(teamsData.data)
     return teamsData
   }
+
+  @Get('/racer-schedule')
+  async getRacerSchedule() {
+    return await this.crawlService.crawlRacerScheduleData()
+  }
 }

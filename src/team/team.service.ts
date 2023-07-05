@@ -47,8 +47,6 @@ export class TeamService {
 
   async searchTeam(teamInfo) {
     try {
-      console.log(teamInfo);
-      
       const teams = await this.prisma.teams.findMany({
         where:{
           OR: [
@@ -59,17 +57,16 @@ export class TeamService {
             },
             {
               racers: {
-                every: {
+                some: {
                   name: {
-                    contains: teamInfo?.racerName
+                    contains: teamInfo?.raceName
                   }
                 }
               }
             },
           ]
         },
-        select: {
-          name: true,
+        include: {
           racers: true
         }
       })

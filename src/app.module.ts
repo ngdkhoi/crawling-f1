@@ -6,6 +6,9 @@ import { PrismaModule } from './prisma/prisma.module';
 import { TeamController } from './team/team.controller';
 import { TeamService } from './team/team.service';
 import { TeamModule } from './team/team.module';
+import { RacerScheduleService } from './racer-schedule/racer-schedule.service';
+import { RacerScheduleController } from './racer-schedule/racer-schedule.controller';
+import { RacerScheduleModule } from './racer-schedule/racer-schedule.module';
 import {ConfigModule}  from '@nestjs/config';
 
 @Module({
@@ -16,9 +19,10 @@ import {ConfigModule}  from '@nestjs/config';
     CrawlModule,
     RacerModule,
     PrismaModule,
-    TeamModule
+    TeamModule,
+    RacerScheduleModule
   ],
-  providers: [PrismaService, TeamService],
-  controllers: [TeamController],
+  providers: [PrismaService, TeamService, RacerScheduleService],
+  controllers: [TeamController, RacerScheduleController],
 })
 export class AppModule {}
