@@ -29,6 +29,11 @@ export class CrawlController {
     return teamsData
   }
 
+  @Get('/schedule')
+  async getSchedule() {
+    return await this.crawlService.crawlScheduleData()
+  }
+
   @Get('/racer-schedule')
   async getRacerSchedule() {
     return await this.crawlService.crawlRacerScheduleData()

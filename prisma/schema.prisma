@@ -64,6 +64,7 @@ model Schedules {
   endAt DateTime
   place String?
   seasonId Int
+  round Int
   racerSchedule RacerSchedules?
 
   season Seasons @relation(fields: [seasonId], references: [id])

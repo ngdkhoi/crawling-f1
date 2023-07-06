@@ -1,6 +1,7 @@
 import { ForbiddenException, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import axios from "axios";
+import { isNumber } from "class-validator";
 import moment from "moment";
 import puppeteer from "puppeteer";
 import { skip } from "rxjs";
@@ -115,6 +116,49 @@ export class CrawlService {
           }
 
         })
+        return dhhData
+      }) ();
+      
+      return {data: data}
+    } catch (error) {
+      console.log(error);
+      
+    }
+  }
+
+  async crawlScheduleData() {
+    try {
+      const url = this.config.get('F1_URL') + `/racing/${2023}.html`
+      const data = await (async () => {
+        const browser = await puppeteer.launch({ headless: true });
+        const page = await browser.newPage();
+        await page.goto(url);
+        
+        const dhhData = await page.evaluate(() => {
+          const namesHTML = document.getElementsByClassName('event-place')
+          const roundsHTML = document.getElementsByTagName('legend')
+          const datesHTML = document.getElementsByClassName('date-month f1-uppercase f1-wide--s')
+          const monthHTML = document.getElementsByClassName('month-wrapper f1-wide--xxs')
+          const data = [...namesHTML].map((line, idx) => {
+            const place = line.innerHTML.split(' <')[0]
+            const roundText = roundsHTML[idx].innerHTML
+            const startDate = datesHTML[idx].getElementsByClassName('start-date')[0].innerHTML
+            const endDate = datesHTML[idx].getElementsByClassName('end-date')[0].innerHTML
+            const month = monthHTML[idx].innerHTML
+            let round
+            if (roundText == 'TESTING') {
+              round = 0
+            }
+            else if (roundText.includes('ROUND')) {
+              round = parseInt(roundText.split(/[ <]/)[1])
+            }
+            if (isNaN(round)) return 
+            else return {place, round, startDate, endDate, month}
+          })
+          return data
+        });
+        
+        await browser.close();
         return dhhData
       }) ();
       
