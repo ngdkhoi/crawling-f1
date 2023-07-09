@@ -10,8 +10,8 @@ async function bootstrap() {
   .setDescription('this is example')
   .setVersion('1.0')
   .build();
-const document = SwaggerModule.createDocument(app, config);
-SwaggerModule.setup('api', app, document);
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document);
 
   app.useGlobalPipes(new ValidationPipe({whitelist: true}))
   await app.listen(3000);
