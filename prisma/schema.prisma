@@ -32,7 +32,7 @@ model Racers {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
 
-  racerSchedule RacerSchedules?
+  racerSchedule RacerSchedules[]
   team Teams @relation(fields: [teamId], references: [id])
 
   @@map("racers")
@@ -63,9 +63,10 @@ model Schedules {
   startAt DateTime
   endAt DateTime
   place String?
+  placeId Int?
   seasonId Int
   round Int
-  racerSchedule RacerSchedules?
+  racerSchedule RacerSchedules[]
 
   season Seasons @relation(fields: [seasonId], references: [id])
   createdAt DateTime @default(now())
@@ -85,8 +86,8 @@ model TeamSchedules {
 
 model RacerSchedules {
   id Int @id @default(autoincrement())
-  racerId Int @unique
-  scheduleId Int @unique
+  racerId Int
+  scheduleId Int
   pts Int?
   completeTime Float?
   createdAt DateTime @default(now())

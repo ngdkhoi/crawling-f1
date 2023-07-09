@@ -13,7 +13,10 @@ import { isString } from "util";
 
 @Injectable ({})
 export class CrawlService {
-  constructor(private config: ConfigService) {}
+  constructor(
+    private config: ConfigService,
+    private prisma: PrismaService
+    ) {}
   async crawlRacerData():Promise<{data: Array<object>}> {
     const url = 'https://www.formula1.com/en/drivers.html';
 
@@ -75,15 +78,34 @@ export class CrawlService {
     return {data: data}
   }
 
-  async crawlRacerScheduleData() {
+  async crawlRacerScheduleData(year, placeId) {
     try {
-      const url = this.config.get('F1_URL') + `/results.html/${2023}/races/1141/bahrain/race-result.html`
+      const place = await this.prisma.schedules.findFirst({
+        where: {
+          AND: [
+            {
+              placeId: placeId
+            },
+            {
+              season: {
+                year: year
+              }
+            }
+          ]
+        }
+      })
+      
+      
+      if (!place) throw 'Cannot find place'
+      const url = this.config.get('F1_URL') + `/results.html/${year}/races/${placeId}/bahrain/race-result.html`
       const data = await (async () => {
         const browser = await puppeteer.launch({ headless: true });
         const page = await browser.newPage();
         await page.goto(url);
         
         const dhhData = await page.evaluate(() => {
+          const noRes = document.getElementsByClassName('no-results')
+          if (!noRes) return 
           const table = document.getElementsByClassName('resultsarchive-table')[0].getElementsByTagName('tbody')
           
           const lines = table[0].children; //Lấy mảng tr nằm trong tbody
@@ -97,9 +119,10 @@ export class CrawlService {
             else {
               time = (line.children[6].innerHTML).split(/[+<]/)[1]
             }
-            const pts = line.children[7].innerHTML
+            const pts = parseInt(line.children[7].innerHTML)
             
-            return {rank, name, pts, time, idx}
+            return {rank, name, pts, time}
+            // return noRes
           })
         });
         
@@ -116,19 +139,20 @@ export class CrawlService {
           }
 
         })
+        
+        
         return dhhData
       }) ();
-      
-      return {data: data}
+      return {place: place, schedules: data}
     } catch (error) {
       console.log(error);
-      
+      return error
     }
   }
 
-  async crawlScheduleData() {
+  async crawlScheduleData(year: number) {
     try {
-      const url = this.config.get('F1_URL') + `/racing/${2023}.html`
+      const url = this.config.get('F1_URL') + `/racing/${year}.html`
       const data = await (async () => {
         const browser = await puppeteer.launch({ headless: true });
         const page = await browser.newPage();
@@ -136,15 +160,16 @@ export class CrawlService {
         
         const dhhData = await page.evaluate(() => {
           const namesHTML = document.getElementsByClassName('event-place')
+          const placeIdHTML = document.getElementsByClassName('event-item-wrapper event-item-link')
           const roundsHTML = document.getElementsByTagName('legend')
           const datesHTML = document.getElementsByClassName('date-month f1-uppercase f1-wide--s')
-          const monthHTML = document.getElementsByClassName('month-wrapper f1-wide--xxs')
+          const monthHTML = document.getElementsByClassName('month-wrapper')
+          let minusMonth = 0
           const data = [...namesHTML].map((line, idx) => {
+            const placeId = parseInt(placeIdHTML[idx]?.getAttribute('data-meetingkey'))
             const place = line.innerHTML.split(' <')[0]
             const roundText = roundsHTML[idx].innerHTML
-            const startDate = datesHTML[idx].getElementsByClassName('start-date')[0].innerHTML
-            const endDate = datesHTML[idx].getElementsByClassName('end-date')[0].innerHTML
-            const month = monthHTML[idx].innerHTML
+            let month = null
             let round
             if (roundText == 'TESTING') {
               round = 0
@@ -152,8 +177,17 @@ export class CrawlService {
             else if (roundText.includes('ROUND')) {
               round = parseInt(roundText.split(/[ <]/)[1])
             }
+            if ((roundText.includes('UP') || roundText.includes('LIVE')) && monthHTML.length != roundsHTML.length) {
+              minusMonth = 1
+              month = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][new Date().getMonth()]
+            } 
+            const startDate = datesHTML[idx].getElementsByClassName('start-date')[0].innerHTML
+            const endDate = datesHTML[idx].getElementsByClassName('end-date')[0].innerHTML
+            
+            if (month == null) month = monthHTML[idx - minusMonth].innerHTML
+
             if (isNaN(round)) return 
-            else return {place, round, startDate, endDate, month}
+            else return {place, round, startDate, endDate, month, placeId}
           })
           return data
         });

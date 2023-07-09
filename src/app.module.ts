@@ -9,6 +9,7 @@ import { TeamModule } from './team/team.module';
 import { RacerScheduleService } from './racer-schedule/racer-schedule.service';
 import { RacerScheduleController } from './racer-schedule/racer-schedule.controller';
 import { RacerScheduleModule } from './racer-schedule/racer-schedule.module';
+import { ScheduleModule } from './schedule/schedule.module';
 import {ConfigModule}  from '@nestjs/config';
 
 @Module({
@@ -20,7 +21,8 @@ import {ConfigModule}  from '@nestjs/config';
     RacerModule,
     PrismaModule,
     TeamModule,
-    RacerScheduleModule
+    RacerScheduleModule,
+    ScheduleModule
   ],
   providers: [PrismaService, TeamService, RacerScheduleService],
   controllers: [TeamController, RacerScheduleController],

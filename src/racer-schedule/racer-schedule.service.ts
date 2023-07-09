@@ -4,34 +4,55 @@ import { PrismaService } from 'src/prisma/prisma.service';
 @Injectable()
 export class RacerScheduleService {
   constructor(private prisma: PrismaService){}
-  async createRacerSchedule(listRacerSchedule, year) {
+  async createRacerSchedules(listRacerSchedule, year, placeId) {
     try {
+      let  season = await this.prisma.seasons.findFirst({where:{year: year}})
+      if (season == null) {
+        season = await this.prisma.seasons.create({
+          data: {
+            year: year
+          }
+        })
+      }
       const addRacerSchedules = listRacerSchedule.forEach(async racerSchedule => {
-        const season = await this.prisma.seasons.findFirst({where:{year: year}})
         const racer = await this.prisma.racers.findFirst({
           where: {
-            id: {
-              in: season.racerId
-            }
+            AND: [
+              {
+                id: {
+                  in: season.racerId
+                }
+              },
+              {
+                name: racerSchedule.name
+              }
+            ]
           }
         })
         const schedule = await this.prisma.schedules.findFirst({
           where: {
-            id: {
-              in: season.racerId
+            placeId: placeId
+          }
+        })
+        if (racer != null && schedule != null) {
+          console.log(racer.id);
+          console.log(schedule.id);
+          
+          await this.prisma.racerSchedules.create({
+            data:{
+              racerId: racer.id,
+              scheduleId: schedule.id,
+              pts: racerSchedule.pts,
+              completeTime: racerSchedule.timeRace || null
             }
-          }
-        })
-        const teamDb = await this.prisma.racerSchedules.create({
-          data:{
-            racerId: racer.id,
-            scheduleId: schedule.id
-          }
-        })
+          })
+        }
+        
       })
 
       await Promise.all(addRacerSchedules)
     } catch (error) {
+      console.log(error);
       
     }
   }
