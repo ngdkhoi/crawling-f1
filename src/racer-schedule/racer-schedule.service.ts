@@ -34,10 +34,8 @@ export class RacerScheduleService {
             placeId: placeId
           }
         })
-        if (racer != null && schedule != null) {
-          console.log(racer.id);
-          console.log(schedule.id);
-          
+        const isExist = await this.isExist(racer?.id, schedule?.id)
+        if (racer != null && schedule != null && !isExist) {
           await this.prisma.racerSchedules.create({
             data:{
               racerId: racer.id,
@@ -53,6 +51,22 @@ export class RacerScheduleService {
       await Promise.all(addRacerSchedules)
     } catch (error) {
       console.log(error);
+      
+    }
+  }
+
+  private async isExist(racerId, scheduleId) {
+    try {
+      const racerSchedule = await this.prisma.racerSchedules.findFirst({
+        where: {
+          racerId,
+          scheduleId
+        }
+      })
+      console.log(racerSchedule);
+      
+      return !racerSchedule ? false :true
+    } catch (error) {
       
     }
   }

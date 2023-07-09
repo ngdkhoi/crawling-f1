@@ -24,13 +24,8 @@ export class ScheduleService {
       
       const addSchedule = schedules.forEach(async ele => {
         const month = splitMonth(ele.month)
-        const schedule = await this.prisma.schedules.findFirst({
-          where: {
-            seasonId: season.id,
-            round: ele.round
-          }
-        })
-        if (!schedule) {
+        const isExist = await this.isExist(season.id, ele.round)
+        if (!isExist) {
           await this.prisma.schedules.create({
             data: {
               startAt: new Date(year, months.indexOf(month[0]), ele.startDate),
@@ -47,6 +42,21 @@ export class ScheduleService {
       await Promise.all(addSchedule)
     } catch (error) {
       console.log(error);
+      
+    }
+  }
+
+  private async isExist(seasonId, round) {
+    try {
+      const schedule = await this.prisma.schedules.findFirst({
+        where: {
+          seasonId,
+          round
+        }
+      })
+
+      return schedule ? true : false
+    } catch (error) {
       
     }
   }

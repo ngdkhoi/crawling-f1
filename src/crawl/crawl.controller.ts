@@ -19,8 +19,8 @@ export class CrawlController {
   @Get('/crawl-racers')
   async getRacer() {
     const racersData = await this.crawlService.crawlRacerData()
-
-    await this.racerService.createRacers(racersData.data)
+    
+    await this.racerService.createRacers(racersData.racers, racersData.year)
 
     return racersData
   }
@@ -46,9 +46,10 @@ export class CrawlController {
   @ApiQuery({name: 'placeId', required: true, type: Number})
   async getRacerSchedule(@Query() req) {
     const racerSchedules = await this.crawlService.crawlRacerScheduleData(parseInt(req.year), parseInt(req.placeId))
-    console.log(racerSchedules);
+    if (racerSchedules.schedules) {
+      await this.racerScheduleService.createRacerSchedules(racerSchedules.schedules, parseInt(req.year), parseInt(req.placeId))
+    }
     
-    await this.racerScheduleService.createRacerSchedules(racerSchedules.schedules, parseInt(req.year), parseInt(req.placeId))
     return racerSchedules
   }
 }
