@@ -1,0 +1,98 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Teams {
+  id Int @id  @default(autoincrement())
+  name String
+  logoImageUrl String
+  racers Racers[]
+  teamSchedule TeamSchedules[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  @@map("teams")
+}
+
+model Racers {
+  id Int @id @default(autoincrement())
+  name String
+  href String?
+  avatarUrl String?
+  teamId Int @default(1)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  racerSchedule RacerSchedules[]
+  team Teams @relation(fields: [teamId], references: [id])
+
+  @@map("racers")
+}
+
+model Seasons {
+  id Int @id @default(autoincrement())
+  year Int @unique
+  racerId Int[]
+  schedule Schedules[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
+model Rounds {
+  id Int @id @default(autoincrement())
+  ordinalNumber Int
+  place String
+  round Int
+  raceTrack String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+}
+
+model Schedules {
+  id Int @id @default(autoincrement())
+  startAt DateTime
+  endAt DateTime
+  place String?
+  placeId Int?
+  seasonId Int
+  round Int
+  racerSchedule RacerSchedules[]
+
+  season Seasons @relation(fields: [seasonId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  @@map("schedules")
+}
+
+model TeamSchedules {
+  id Int @id @default(autoincrement())
+  teamId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  team Teams @relation(fields: [teamId], references: [id])
+}
+
+model RacerSchedules {
+  id Int @id @default(autoincrement())
+  racerId Int
+  scheduleId Int
+  pts Int?
+  completeTime Float?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  schedule Schedules @relation(fields: [scheduleId], references: [id])
+  racer Racers @relation(fields: [racerId], references: [id])
+}
