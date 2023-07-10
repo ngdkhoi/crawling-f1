@@ -8,16 +8,20 @@ export class TeamService {
   async createTeams(listTeams) {
     try {
       const addTeams = listTeams.forEach(async team => {
-        const teamDb = await this.prisma.teams.create({
-          data:{
-            name: team.name,
-            logoImageUrl: team.logo,
-          }
-        })
-
-        team.racers.forEach(async racer => {
-          await this.updateTeamForRacer(teamDb.id, racer)
-        })
+        const isExist = await this.isExist(team.name)
+        if (!isExist) {
+          const teamDb = await this.prisma.teams.create({
+            data:{
+              name: team.name,
+              logoImageUrl: team.logo,
+            }
+          })
+  
+          team.racers.forEach(async racer => {
+            await this.updateTeamForRacer(teamDb.id, racer)
+          })
+        }
+        
       })
 
       await Promise.all(addTeams)
@@ -43,6 +47,19 @@ export class TeamService {
     })
 
     return true
+  }
+
+  private async isExist(teamName) {
+    try {
+      const team = await this.prisma.teams.findFirst({
+        where: {
+          name: teamName
+        }
+      })
+      return team ? true :false
+    } catch (error) {
+      
+    }
   }
 
   async searchTeam(teamInfo) {

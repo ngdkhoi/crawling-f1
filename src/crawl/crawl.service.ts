@@ -17,9 +17,9 @@ export class CrawlService {
     private config: ConfigService,
     private prisma: PrismaService
     ) {}
-  async crawlRacerData():Promise<{data: Array<object>}> {
+  async crawlRacerData(): Promise<{racers: Array<object>, year: number}> {
     const url = 'https://www.formula1.com/en/drivers.html';
-
+    
     const data = await (async () => {
       const browser = await puppeteer.launch({ headless: true });
       const page = await browser.newPage();
@@ -27,23 +27,31 @@ export class CrawlService {
       
       const dhhData = await page.evaluate(() => {
         const table = document.getElementsByClassName('container listing-items--wrapper driver during-season')
-  
+        const year = document.getElementsByClassName('f1-border--top-right f1-border-color--carbonBlack')[0].getElementsByClassName('f1-black--xxl no-margin')[0].innerHTML.split(' ')[2]
         const lines = table[0].children[0].children; //Lấy mảng tr nằm trong tbody
-        return [...lines].map(line => {
-          const name = line.getElementsByClassName('d-block f1--xxs f1-color--carbonBlack')[0].innerHTML + ' ' + line.getElementsByClassName('d-block f1-bold--s f1-color--carbonBlack')[0].innerHTML
-          const rank = line.getElementsByClassName('rank')[0].innerHTML //.children[0].children[0].children[0].innerHTML
+        return {...{data: [...lines].map(line => {
+          let nameHTML = line?.getElementsByClassName('col-xs-8 listing-item--name f1-uppercase driver-lastname-primary')[0]?.children || line.getElementsByClassName('col-xs-8 listing-item--name f1-uppercase')[0].children
+          // nameHTML
+          let name = null
+          if (line?.getElementsByClassName('col-xs-8 listing-item--name f1-uppercase driver-lastname-primary')[0]?.children) {
+            name = nameHTML[1].innerHTML + ' ' + nameHTML[0].innerHTML
+          }
+          else {
+            name = nameHTML[0].innerHTML + ' ' + nameHTML[1].innerHTML
+          }
+          const rank = line.getElementsByClassName('rank')[0].innerHTML
           const pts = line.getElementsByClassName('f1-wide--s')[0].innerHTML
           const href = line.getElementsByClassName('listing-item--link')[0].getAttribute('href')
           const team = line.getElementsByClassName('listing-item--team f1--xxs f1-color--gray5')[0].innerHTML
-          return {name, href}
-        })
+          return {name, href, team, rank, pts}
+        })}, ...{year: parseInt(year)}}
       });
       
       await browser.close();
-      return dhhData
+      return {racers: dhhData.data, year: dhhData.year}
     }) ();
     
-    return {data: data}
+    return {racers: data.racers, year: data.year}
   }
 
   async crawlTeamData():Promise<{data: Array<object>}> {
@@ -104,8 +112,8 @@ export class CrawlService {
         await page.goto(url);
         
         const dhhData = await page.evaluate(() => {
-          const noRes = document.getElementsByClassName('no-results')
-          if (!noRes) return 
+          const dateSchedule = document.getElementsByClassName('full-date')[0].innerHTML
+          if (new Date(dateSchedule) >= new Date()) return null
           const table = document.getElementsByClassName('resultsarchive-table')[0].getElementsByTagName('tbody')
           
           const lines = table[0].children; //Lấy mảng tr nằm trong tbody
@@ -122,12 +130,12 @@ export class CrawlService {
             const pts = parseInt(line.children[7].innerHTML)
             
             return {rank, name, pts, time}
-            // return noRes
           })
         });
         
         await browser.close();
-        let currentTime = convertMinToSecond(dhhData[0]['time'])
+        if (dhhData != null) {
+          let currentTime = convertMinToSecond(dhhData[0]['time'])
         
         dhhData.forEach((data, idx) => {
           if (idx != 0) {
@@ -139,7 +147,7 @@ export class CrawlService {
           }
 
         })
-        
+        }
         
         return dhhData
       }) ();
