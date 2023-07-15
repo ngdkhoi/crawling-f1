@@ -8,6 +8,7 @@ export class RacerService {
   async createRacers(listRacers, year) {
     try {
       let  season = await this.prisma.seasons.findFirst({where:{year: year}})
+
       if (season == null) {
         season = await this.prisma.seasons.create({
           data: {
@@ -15,12 +16,11 @@ export class RacerService {
           }
         })
       }
-      const ids = []
-      const addRacers = listRacers.forEach(async (racer) => {
+      const addRacers = listRacers.map(async (racer) => {
         const team = await this.prisma.teams.findFirst({where: {
           name: racer.team
         }}) || {id: 1}
-        console.log(team);
+        
         const isExist = await this.isExist(racer.name, racer.team)
         if (!isExist) {
           const newRacer = await this.prisma.racers.create({
@@ -30,17 +30,19 @@ export class RacerService {
               teamId: team.id
             }
           })
-          ids.push(newRacer)
+          
+          season.racerId.push(newRacer.id)
         }
 
       })
       await Promise.all(addRacers)
+      
       await this.prisma.seasons.update({
         where: {
           year: year
         },
         data: {
-          racerId: ids
+          racerId: season.racerId
         }
       })
     } catch (error) {
