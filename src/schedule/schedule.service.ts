@@ -22,7 +22,7 @@ export class ScheduleService {
         return res.length == 1 ? [res[0], res[0]] : [res[0], res[1]]
       }
       
-      const addSchedule = schedules.forEach(async ele => {
+      const addSchedule = schedules.map(async ele => {
         const month = splitMonth(ele.month)
         const isExist = await this.isExist(season.id, ele.round)
         if (!isExist) {

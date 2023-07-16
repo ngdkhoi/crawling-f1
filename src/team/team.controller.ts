@@ -1,6 +1,7 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { TeamService } from './team.service';
+import { TeamSerializer } from './dto';
 
 @Controller('team')
 @ApiTags('Teams')
