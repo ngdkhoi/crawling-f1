@@ -7,7 +7,7 @@ export class TeamService {
   constructor(private prisma: PrismaService){}
   async createTeams(listTeams) {
     try {
-      const addTeams = listTeams.forEach(async team => {
+      const addTeams = listTeams.map(async team => {
         const isExist = await this.isExist(team.name)
         if (!isExist) {
           const teamDb = await this.prisma.teams.create({
