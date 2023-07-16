@@ -1,0 +1,19 @@
+FROM node:16
+RUN echo deb http://apt.postgresql.org/pub/repos/apt/ focal-pgdg main > /etc/apt/sources.list.d/pgdg.list
+RUN wget --no-check-certificate  --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+RUN apt-get update -qq && apt-get dist-upgrade -y -q
+# install Node.js v16
+# https://github.com/nodesource/distributions/blob/master/README.md#debinstall
+RUN apt-get remove --purge nodejs \
+      && curl -sL https://deb.nodesource.com/setup_16.x | bash - \
+      && apt-get install -y nodejs
+RUN npm install --global yarn
+RUN apt-get install -y postgresql-client-10
+RUN curl https://cli-assets.heroku.com/install.sh | sh
+RUN mkdir /app
+WORKDIR /app
+COPY Gemfile /app/Gemfile
+COPY Gemfile.lock /app/Gemfile.lock
+RUN bundle install
+COPY . /app
+RUN yarn install --check-files
